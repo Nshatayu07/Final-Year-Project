@@ -1,10 +1,28 @@
 import React from 'react'
-// import { useState, useEffect, } from 'react';
+import { useState, useEffect, } from 'react';
 import { useNavigate } from 'react-router-dom';
-// import axios from 'axios';
+import axios from 'axios';
 
 const Table = () => {
     const navigate = useNavigate();
+    const [data, setData] = useState([])
+
+    useEffect(() => {
+      const requestData = async () => {
+          try {
+              const response = await axios.get('http://localhost:5000/getStudents', {
+                  
+              })
+              if (response.status === 200) {
+                  setData(response.data.data)
+                  console.log(response.data.data);
+              }
+          } catch (error) {
+              console.log(error)
+          }
+      }
+      requestData()
+  }, [])
   return (
     <>
       <div className="container-table">
@@ -14,17 +32,17 @@ const Table = () => {
                         <div className="col mcol-2">Student prn</div>
                         <div>Progress</div>
                     </li>
-                        <li className="table-row">
-                                <div className="col mcol-1" data-label="Sr no">1</div>
-                                <div className="col mcol-2" data-label="Student prn">2020bteit00031</div>
-                                <button data-label="Status" style={{borderColor:"white"}}>Show progress</button>
-                    </li>
-                    <li className="table-row">
-                                <div className="col mcol-1" data-label="Sr no">2</div>
-                                <div className="col mcol-2" data-label="Student prn">2020bteit00055</div>
-                                <button data-label="Status" style={{borderColor:"white"}}>Show progress</button>
-                    </li>
-
+                    {data.map((item, index) => {
+                        return (
+                            <li className="table-row" key={index}>
+                                <div className="col mcol-1" data-label="Sr no">{index + 1}</div>
+                                <div className="col mcol-2" data-label="Company Name">{item.orgName}</div>
+                            </li>
+                        )
+                    })}
+                   <li>
+                   <button data-label="Status" style={{borderColor:"white"}}>Show progress</button>
+                   </li>
                     
                 </ul>
             </div>

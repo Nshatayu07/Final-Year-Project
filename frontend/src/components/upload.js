@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const Upload = () => {
     const navigate = useNavigate();
-    const [name, setName] = React.useState('');
+    const [testCode, setName] = React.useState('');
     const [file, setFile] = React.useState('');
 
     const HandleFile = (e) => {
@@ -18,8 +18,8 @@ const Upload = () => {
     const submitButton = async () => {
         try {
             console.log("hehehehe");
-            if (name === '') {
-                alert('Enter name');
+            if (testCode === '') {
+                alert('Enter test code');
                 return;
             }
             if (file === '') {
@@ -28,13 +28,13 @@ const Upload = () => {
             }
             const formData = new FormData();
             formData.append('file', file);
-            formData.append('name', name);
-            const res = await axios.post('http://localhost:5000/', formData, {
+            formData.append('code', testCode);
+            const res = await axios.post('http://localhost:5000/uploadFile', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            navigate('/Graph', { state: { data: res.data, name: name } });
+            navigate('/Table', { state: { data: res.data, code: testCode } });
         }
         catch (e) {
             console.log(e);
@@ -57,7 +57,7 @@ const Upload = () => {
                                     type="text"
                                     className="form-control mt-1"
                                     placeholder="Enter unique code"
-                                    value={name}
+                                    value={testCode}
                                     onChange={HandleName}
                                 />
                             </div>
