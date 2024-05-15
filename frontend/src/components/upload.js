@@ -1,6 +1,8 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { BASE_URL } from '../constants/constants.js'
+
 
 const Upload = () => {
     const navigate = useNavigate();
@@ -28,16 +30,32 @@ const Upload = () => {
             }
             const formData = new FormData();
             formData.append('file', file);
-            formData.append('code', testCode);
-            const res = await axios.post('http://localhost:5000/uploadFile', formData, {
+            formData.append('test_code', testCode);
+
+            document.querySelector('.App').style.opacity = '0.5';
+            document.querySelector('.loader').style.display = 'block';
+
+            const res = await axios.post(`${BASE_URL}/upload`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            navigate('/Table', { state: { data: res.data, code: testCode } });
+
+            document.querySelector('.loader').style.display = 'none';
+            document.querySelector('.App').style.opacity = '1';
+
+            if (res.status === 200) {
+                alert('File uploaded successfully');
+                navigate('/Table', { state: { data: res.data, code: testCode } });
+            }
         }
         catch (e) {
+            document.querySelector('.loader').style.display = 'none';
+            document.querySelector('.App').style.opacity = '1';
             console.log(e);
+            if (e.response.status === 400 && e.response.data.message === 'Test already exists') {
+                alert('Test already exists');
+            }
         }
     }
 
@@ -46,6 +64,8 @@ const Upload = () => {
             <div className='Header'>
                 <h2>Performance Analysis</h2>
             </div>
+            {/* insert loading spinner */}
+            <div className="loader"></div>
             <div className='App'>
                 <div className="Auth-form-container">
                     <div className="Auth-form mt-0 mb-5">
@@ -68,7 +88,7 @@ const Upload = () => {
                                     className="form-control mt-1"
                                     placeholder="choose file"
                                     onChange={HandleFile}
-                                    accept=".xlsx"
+                                    accept=".csv"
                                 />
                             </div>
                             <div className="d-grid gap-2 mt-5">

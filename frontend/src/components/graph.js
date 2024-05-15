@@ -1,5 +1,7 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useLocation } from 'react-router-dom';
+import axios from 'axios';
+import { BASE_URL } from '../constants/constants.js'
 import { Bar } from 'react-chartjs-2'
 import {
     Chart as ChartJS,
@@ -11,6 +13,7 @@ import {
     Legend,
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { pad } from '@tensorflow/tfjs';
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -24,8 +27,27 @@ ChartJS.register(
 
 const Graph = () => {
     const location = useLocation();
-    const result = location.state.data;
-    const name = location.state.name;
+    const roll_number = location.state.roll_number
+    const [result, setResult] = React.useState()
+
+    useEffect(() => {
+        const requestData = async () => {
+            try {
+                const response = await axios.get(`${BASE_URL}/student`, {
+                    params: {
+                        number: roll_number
+                    }
+                })
+                if (response.status === 200) {
+                    setResult(response.data)
+                    console.log(response.data);
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        }
+        requestData()
+    }, [])
 
     const options = {
         plugins: {
@@ -34,10 +56,10 @@ const Graph = () => {
             },
             title: {
                 display: true,
-                text: 'Performance Analysis of ' + name,
+                text: 'Performance Analysis of ' + roll_number,
                 font: {
-                    size: 20,
-                    weight: 'bold',
+                    size: 30,
+                    weight: 'bold'
                 }
             },
             legend: {
@@ -65,13 +87,12 @@ const Graph = () => {
         },
     };
 
-    const labels = ['Physics', 'Chemistry', 'Mathematics'];
 
     const data = {
         datasets: [
             {
                 label: 'correct questions',
-                data: [result.phy_correct, result.chem_correct, result.math_correct],
+                data: result ? result.correct : [],
                 backgroundColor: [
                     'rgba(0, 128, 0, 0.2)', // Green color for correct questions
                     'rgba(0, 128, 0, 0.2)',
@@ -86,7 +107,7 @@ const Graph = () => {
             },
             {
                 label: 'wrong questions',
-                data: [result.phy_incorrect, result.chem_incorrect, result.math_incorrect],
+                data: result ? result.incorrect : [],
                 backgroundColor: [
                     'rgba(255, 0, 0, 0.2)', // Red color for wrong questions
                     'rgba(255, 0, 0, 0.2)',
@@ -100,8 +121,7 @@ const Graph = () => {
                 borderWidth: 1,
             },
         ],
-        labels: labels,
-        // give the chart a title
+        labels: result ? result.labels : []
     };
 
 
@@ -117,15 +137,28 @@ const Graph = () => {
             <br />
             <br />
             <div style={{ display: 'flex', justifyContent: 'start', alignItems: 'left', flexDirection: 'column' }}>
-                {/* find percentage of each sucject */}
-            {result.phy_total != 0 ? <h5>Physics: {Math.round((result.phy_correct / result.phy_total) * 100)}%</h5> : <h5>Physics: 0%</h5>}
-            {result.chem_total != 0 ? <h5>Chemistry: {Math.round((result.chem_correct / result.chem_total) * 100)}%</h5> : <h5>Chemistry: 0%</h5>}
-            {result.math_total != 0 ? <h5>Mathematics: {Math.round((result.math_correct / result.math_total) * 100)}%</h5> : <h5>Mathematics: 0%</h5>}
-            {/* if % are less tha 60% then say to improve */}
-            
-            {result.phy_total != 0 && Math.round((result.phy_correct / result.phy_total) * 100) < 60 ? <h5>Improvement is required in Physics</h5> : null}
-            {result.chem_total != 0 && Math.round((result.chem_correct / result.chem_total) * 100) < 60 ? <h5>Improvement is required in Chemistry</h5> : null}
-            {result.math_total != 0 && Math.round((result.math_correct / result.math_total) * 100) < 60 ? <h5>Improvement is required in Mathematics</h5> : null}
+
+                <br />
+                <br />
+                <table>
+                    <tr>
+                        <th>Label</th>
+                        <th>Correct</th>
+                        <th>Incorrect</th>
+                        <th>Accuracy</th>
+                    </tr>
+                    {result && result.labels.map((label, index) => {
+                        return (
+                            <tr key={index}>
+                                <td>{label}</td>
+                                <td>{result.correct[label]}</td>
+                                <td>{result.incorrect[label]}</td>
+                                <td>{((result.correct[label] / (result.correct[label] + result.incorrect[label])) * 100).toFixed(2)}%</td>
+                            </tr>
+                        )
+                    })}
+                </table>
+                
             </div>
         </div>
     )
